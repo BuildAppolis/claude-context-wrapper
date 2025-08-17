@@ -226,7 +226,7 @@ The wrapper provides two security modes that can be toggled independently:
 
 ### Project Configuration
 
-Create a `.claude/config.json` in your project:
+Create a `.claude/ccw.config.json` in your project:
 
 ```json
 {
@@ -257,7 +257,7 @@ Container mode restricts Claude to the current directory by default, but you can
 
 ```bash
 # Create config with allowed directories
-cat > .claude/config.json << EOF
+cat > .claude/ccw.config.json << EOF
 {
   "allowedDirectories": [
     "~/Documents/shared-components",

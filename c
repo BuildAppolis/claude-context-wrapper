@@ -306,9 +306,10 @@ toggle_container_mode() {
         # Store container config as JSON
         local container_config="{\"root\":\"$(pwd)\",\"allowed\":[]}"
         
-        # Check for allowed directories in .claude/config.json
-        if [[ -f "${CONTEXT_DIR}/config.json" ]]; then
-            local allowed_dirs=$(cat "${CONTEXT_DIR}/config.json" 2>/dev/null | grep -o '"allowedDirectories"[[:space:]]*:[[:space:]]*\[[^]]*\]' | sed 's/.*\[/[/' | sed 's/\]/]/' || echo "[]")
+        # Check for allowed directories in .claude/ccw.config.json
+        if [[ -f "${CONTEXT_DIR}/ccw.config.json" ]]; then
+            # Use tr to remove newlines for easier parsing
+            local allowed_dirs=$(cat "${CONTEXT_DIR}/ccw.config.json" 2>/dev/null | tr '\n' ' ' | grep -o '"allowedDirectories"[[:space:]]*:[[:space:]]*\[[^]]*\]' | sed 's/.*\[/[/' | sed 's/\]/]/' || echo "[]")
             if [[ "$allowed_dirs" != "[]" ]]; then
                 container_config="{\"root\":\"$(pwd)\",\"allowed\":$allowed_dirs}"
                 echo -e "${BLUE}Additional allowed directories from config:${NC}"

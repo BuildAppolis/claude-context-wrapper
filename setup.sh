@@ -95,17 +95,18 @@ EOF
 esac
 
 # Create config file
-cat > .claude/config.json << 'EOF'
+cat > .claude/ccw.config.json << 'EOF'
 {
   "includeGitInfo": true,
   "customContext": {
     "team": "development",
     "priority": "feature-development"
   },
-  "contextTimeout": 3
+  "contextTimeout": 3,
+  "allowedDirectories": []
 }
 EOF
-echo -e "${GREEN}✓${NC} Created .claude/config.json"
+echo -e "${GREEN}✓${NC} Created .claude/ccw.config.json"
 
 echo ""
 echo -e "${GREEN}Setup complete!${NC}"

@@ -26,7 +26,7 @@ tests/
 # Local context files (for development)
 # Keep examples but ignore user-created context files
 .claude/context.*
-.claude/config.json
+.claude/ccw.config.json
 
 # Temporary files
 *.tmp

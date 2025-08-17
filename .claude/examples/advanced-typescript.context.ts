@@ -103,8 +103,8 @@ const generateContext = (): string => {
     };
     
     // Load custom config if exists
-    if (fs.existsSync('.claude/config.json')) {
-        const config = JSON.parse(fs.readFileSync('.claude/config.json', 'utf8'));
+    if (fs.existsSync('.claude/ccw.config.json')) {
+        const config = JSON.parse(fs.readFileSync('.claude/ccw.config.json', 'utf8'));
         if (config.customContext) {
             Object.assign(context, config.customContext);
         }

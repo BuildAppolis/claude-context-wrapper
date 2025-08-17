@@ -135,8 +135,8 @@ def get_environment_info() -> Dict[str, Any]:
     }
 
 def load_custom_config() -> Dict[str, Any]:
-    """Load custom configuration from .claude/config.json."""
-    config_path = Path('.claude/config.json')
+    """Load custom configuration from .claude/ccw.config.json."""
+    config_path = Path('.claude/ccw.config.json')
     if config_path.exists():
         try:
             with open(config_path) as f:
