@@ -343,8 +343,16 @@ main() {
     verify_installation
     show_completion
     
-    # Ask about initialization only if not in dev mode
-    if [[ "$1" != "--dev" ]] && [[ "$1" != "--no-init" ]]; then
+    # Ask about initialization only if not in dev mode or --no-init flag
+    local skip_init=false
+    for arg in "$@"; do
+        if [[ "$arg" == "--no-init" ]] || [[ "$arg" == "--dev" ]]; then
+            skip_init=true
+            break
+        fi
+    done
+    
+    if [[ "$skip_init" == "false" ]]; then
         initialize_project
     fi
 }
@@ -352,5 +360,5 @@ main() {
 # Handle errors
 trap 'echo -e "\n${RED}Installation failed!${NC}"' ERR
 
-# Run installation
-main
+# Run installation with all arguments
+main "$@"
