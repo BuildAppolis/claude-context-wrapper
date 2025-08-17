@@ -63,7 +63,8 @@ WRAPPER OPTIONS:
     --clear-global    Clear global context
     --bypass          Toggle dangerous bypass permissions mode
     --container       Toggle container mode (restricts to current directory)
-    --help wrapper    Show this wrapper help
+    --help            Show this wrapper help (default)
+    --help claude     Show Claude's original help
     --version         Show wrapper and Claude versions
 
 EXAMPLES:
@@ -440,10 +441,19 @@ main() {
     
     # Handle our wrapper-specific commands first
     case "$1" in
-        --help)
-            # Check if this is for our wrapper
-            if [[ "$2" == "wrapper" ]]; then
+        --help|-h)
+            # If just --help with no other args, show wrapper help
+            if [[ $# -eq 1 ]]; then
                 show_help
+                echo ""
+                echo "For Claude's original help, use: cc --help claude"
+                exit 0
+            elif [[ "$2" == "wrapper" ]]; then
+                show_help
+                exit 0
+            elif [[ "$2" == "claude" ]]; then
+                # Show Claude's help
+                $CLAUDE_COMMAND --help
                 exit 0
             fi
             # Otherwise pass through to Claude
