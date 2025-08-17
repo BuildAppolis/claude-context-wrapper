@@ -13,12 +13,12 @@ cd claude-context-wrapper
 ./install.sh
 
 # Initialize in any project
-c --init ts  # For TypeScript projects
-c --init py  # For Python projects
-c --init txt # For simple text context
+cc --init ts  # For TypeScript projects
+cc --init py  # For Python projects
+cc --init txt # For simple text context
 
 # Use Claude with automatic context
-c "write a function to process user data"
+cc "write a function to process user data"
 ```
 
 ## 📋 Table of Contents
@@ -98,28 +98,28 @@ source ~/.bashrc  # or ~/.zshrc
 
 ```bash
 # Use Claude with automatic context
-c "create a REST API endpoint"
+cc "create a REST API endpoint"
 
 # Initialize context for current project
-c --init ts|py|txt
+cc --init ts|py|txt
 
 # Show current context
-c --show-context
+cc --show-context
 
 # Set global context for session
-c --set-global "Working on authentication feature"
+cc --set-global "Working on authentication feature"
 
 # Clear global context
-c --clear-global
+cc --clear-global
 
 # Toggle bypass permissions (use with caution!)
-c --bypass
+cc --bypass
 
 # Toggle container mode (safer operation)
-c --container
+cc --container
 
 # Show help
-c --help
+cc --help
 ```
 
 ### 🔒 Safety Features
@@ -130,14 +130,14 @@ Restrict Claude to only access files within the current directory and its subdir
 ```bash
 # Enable container mode in your project directory
 cd /path/to/my-project
-c --container
+cc --container
 
 # Now Claude can only access files within /path/to/my-project
-c "refactor the authentication module"
+cc "refactor the authentication module"
 
 # Attempting to use from outside will fail
 cd /tmp
-c "do something" # Error: Outside container root!
+cc "do something" # Error: Outside container root!
 ```
 
 #### Bypass Permissions Mode
@@ -145,19 +145,19 @@ Allow Claude to modify files without asking for permission (use with extreme cau
 
 ```bash
 # Enable bypass mode
-c --bypass
+cc --bypass
 # ⚠️ WARNING: Claude can now modify ANY files without asking!
 
 # For safer operation, combine with container mode
-c --container  # First, restrict to current directory
-c --bypass     # Then enable bypass within that container
+cc --container  # First, restrict to current directory
+cc --bypass     # Then enable bypass within that container
 
 # Now Claude can modify files freely, but only within the container
 ```
 
 ### Context File Templates
 
-When you run `c --init [type]`, it creates a `.claude/` folder with a context file:
+When you run `cc --init [type]`, it creates a `.claude/` folder with a context file:
 
 #### TypeScript (`context.ts`)
 ```typescript
@@ -272,7 +272,7 @@ cat > .claude/ccw.config.json << EOF
 EOF
 
 # Enable container mode
-c --container
+cc --container
 # Claude can now access:
 # - Current directory and subdirectories
 # - ~/Documents/shared-components/*
@@ -302,10 +302,10 @@ See the `.claude/examples/` directory for advanced examples.
 ```bash
 # Initialize for a React project
 cd my-react-app
-c --init ts
+cc --init ts
 
 # Now use Claude with React context
-c "create a custom hook for authentication"
+cc "create a custom hook for authentication"
 ```
 
 ### Django Project Setup
@@ -313,10 +313,10 @@ c "create a custom hook for authentication"
 ```bash
 # Initialize for a Django project
 cd my-django-project
-c --init py
+cc --init py
 
 # The context will automatically detect Django
-c "create a new model for user profiles with proper migrations"
+cc "create a new model for user profiles with proper migrations"
 ```
 
 ### Setting Project-Wide Context
@@ -331,7 +331,7 @@ API Version: v2.1.0
 Deployment: Kubernetes on AWS" > .claude/context.txt
 
 # This static context will be included in every command
-c "optimize the database queries in the user service"
+cc "optimize the database queries in the user service"
 ```
 
 ## 🔧 Advanced Usage
@@ -349,7 +349,7 @@ The tool combines context in this order:
 ```bash
 # Enable debug mode to see how context is built
 export CCW_DEBUG=true
-c --show-context
+cc --show-context
 
 # Check what context file is being loaded
 ls -la .claude/
@@ -385,7 +385,7 @@ jobs:
       
       - name: Analyze with Claude
         run: |
-          c "review this pull request and suggest improvements"
+          cc "review this pull request and suggest improvements"
 ```
 
 ## 🤝 Contributing

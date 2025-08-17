@@ -14,14 +14,14 @@ NC='\033[0m'
 
 # Configuration
 INSTALL_DIR="$HOME/.local/bin"
-SCRIPT_NAME="c"
+SCRIPT_NAME="cc"  # Using 'cc' to avoid conflicts with 'c'
 GITHUB_RAW="https://raw.githubusercontent.com/BuildAppolis/claude-context-wrapper/main"
 
 # Detect if running from local clone or via curl
-if [[ -f "${BASH_SOURCE[0]}" ]] && [[ -f "$(dirname "${BASH_SOURCE[0]}")/c" ]]; then
+if [[ -f "${BASH_SOURCE[0]}" ]] && [[ -f "$(dirname "${BASH_SOURCE[0]}")/cc" ]]; then
     # Running from local clone
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    SOURCE_SCRIPT="$SCRIPT_DIR/c"
+    SOURCE_SCRIPT="$SCRIPT_DIR/cc"
     INSTALL_MODE="local"
 else
     # Running via curl
@@ -103,9 +103,9 @@ install_wrapper() {
     else
         # Download from GitHub
         if command -v curl &> /dev/null; then
-            curl -sSL "$GITHUB_RAW/c" -o "$INSTALL_DIR/$SCRIPT_NAME"
+            curl -sSL "$GITHUB_RAW/cc" -o "$INSTALL_DIR/$SCRIPT_NAME"
         elif command -v wget &> /dev/null; then
-            wget -q "$GITHUB_RAW/c" -O "$INSTALL_DIR/$SCRIPT_NAME"
+            wget -q "$GITHUB_RAW/cc" -O "$INSTALL_DIR/$SCRIPT_NAME"
         else
             echo -e "${RED}✗${NC}"
             echo "Error: Neither curl nor wget found. Please install one of them."
@@ -292,7 +292,7 @@ initialize_project() {
             ;;
         4|*)
             echo -e "${YELLOW}Skipping initialization.${NC}"
-            echo "You can initialize context later with: c --init <type>"
+            echo "You can initialize context later with: cc --init <type>"
             ;;
     esac
 }
@@ -305,11 +305,11 @@ show_completion() {
     echo -e "${GREEN}════════════════════════════════════════════${NC}"
     echo ""
     echo "Commands Available (after restart):"
-    echo "  c --help         Show help"
-    echo "  c --init <type>  Initialize context (ts/py/txt)"
-    echo "  c --show-context Show current context"
-    echo "  c --bypass       Toggle bypass permissions mode"
-    echo "  c --container    Toggle container mode"
+    echo "  cc --help         Show help"
+    echo "  cc --init <type>  Initialize context (ts/py/txt)"
+    echo "  cc --show-context Show current context"
+    echo "  cc --bypass       Toggle bypass permissions mode"
+    echo "  cc --container    Toggle container mode"
     echo ""
     echo "Documentation: https://github.com/BuildAppolis/claude-context-wrapper"
     echo "Created by: BuildAppolis (www.buildappolis.com)"
@@ -357,7 +357,7 @@ main() {
     echo -e "${YELLOW}⚠  IMPORTANT: Restart your terminal!${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
-    echo "The 'c' command won't work until you:"
+    echo "The 'cc' command won't work until you:"
     echo -e "  ${GREEN}1.${NC} Close this terminal window/tab"
     echo -e "  ${GREEN}2.${NC} Open a new terminal"
     echo ""

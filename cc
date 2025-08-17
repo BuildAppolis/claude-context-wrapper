@@ -51,7 +51,7 @@ show_help() {
 Claude Context Wrapper v${VERSION}
 Created by BuildAppolis (www.buildappolis.com)
 
-Usage: c [OPTIONS] "prompt"
+Usage: cc [OPTIONS] "prompt"
 
 OPTIONS:
     --init <type>     Initialize context file (ts, py, or txt)
@@ -64,10 +64,10 @@ OPTIONS:
     --version         Show version information
 
 EXAMPLES:
-    c "create a REST API endpoint"
-    c --init ts
-    c --set-global "Working on authentication"
-    c --show-context
+    cc "create a REST API endpoint"
+    cc --init ts
+    cc --set-global "Working on authentication"
+    cc --show-context
 
 ENVIRONMENT VARIABLES:
     CLAUDE_CONTEXT    Global context string
@@ -258,7 +258,7 @@ show_context() {
     elif [[ -f "${CONTEXT_DIR}/context.txt" ]]; then
         echo -e "${GREEN}Using context file:${NC} ${CONTEXT_DIR}/context.txt"
     else
-        echo -e "${YELLOW}No project context file found.${NC} Use 'c --init <type>' to create one."
+        echo -e "${YELLOW}No project context file found.${NC} Use 'cc --init <type>' to create one."
     fi
     
     if [[ -n "$CLAUDE_CONTEXT" ]]; then
@@ -432,8 +432,8 @@ main() {
             
         "")
             echo -e "${RED}Error:${NC} No prompt provided"
-            echo "Usage: c \"your prompt here\""
-            echo "Use 'c --help' for more information"
+            echo "Usage: cc \"your prompt here\""
+            echo "Use 'cc --help' for more information"
             exit 1
             ;;
             
