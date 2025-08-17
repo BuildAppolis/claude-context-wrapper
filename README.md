@@ -66,7 +66,11 @@ Other optional dependencies for enhanced functionality:
 ### Automatic Installation
 
 ```bash
+# Interactive installation (will prompt to initialize in current directory)
 curl -sSL https://raw.githubusercontent.com/BuildAppolis/claude-context-wrapper/main/install.sh | bash
+
+# Skip initialization prompt
+curl -sSL https://raw.githubusercontent.com/BuildAppolis/claude-context-wrapper/main/install.sh | bash -s -- --no-init
 ```
 
 ### Manual Installation

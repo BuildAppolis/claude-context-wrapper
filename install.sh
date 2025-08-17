@@ -258,6 +258,45 @@ verify_installation() {
     fi
 }
 
+# Initialize project context
+initialize_project() {
+    echo ""
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${YELLOW}Would you like to initialize Claude context in the current directory?${NC}"
+    echo "Current directory: $(pwd)"
+    echo ""
+    echo "Options:"
+    echo "  1) TypeScript project (.ts)"
+    echo "  2) Python project (.py)"
+    echo "  3) Text-based context (.txt)"
+    echo "  4) Skip for now"
+    echo ""
+    read -p "Enter your choice (1-4): " -n 1 -r
+    echo ""
+    
+    case "$REPLY" in
+        1)
+            echo -e "${GREEN}Initializing TypeScript context...${NC}"
+            "$INSTALL_DIR/$SCRIPT_NAME" --init ts
+            echo -e "${GREEN}✓ Context initialized in $(pwd)/.claude/${NC}"
+            ;;
+        2)
+            echo -e "${GREEN}Initializing Python context...${NC}"
+            "$INSTALL_DIR/$SCRIPT_NAME" --init py
+            echo -e "${GREEN}✓ Context initialized in $(pwd)/.claude/${NC}"
+            ;;
+        3)
+            echo -e "${GREEN}Initializing text context...${NC}"
+            "$INSTALL_DIR/$SCRIPT_NAME" --init txt
+            echo -e "${GREEN}✓ Context initialized in $(pwd)/.claude/${NC}"
+            ;;
+        4|*)
+            echo -e "${YELLOW}Skipping initialization.${NC}"
+            echo "You can initialize context later with: c --init <type>"
+            ;;
+    esac
+}
+
 # Show completion message
 show_completion() {
     echo ""
@@ -266,15 +305,16 @@ show_completion() {
     echo -e "${GREEN}════════════════════════════════════════════${NC}"
     echo ""
     echo "Quick Start:"
-    echo "  1. Restart your terminal or run: source ~/.bashrc"
-    echo "  2. Navigate to any project directory"
-    echo "  3. Initialize context: c --init ts"
-    echo "  4. Use Claude with context: c \"your prompt\""
+    echo "  1. Navigate to any project directory"
+    echo "  2. Initialize context: c --init ts|py|txt"
+    echo "  3. Use Claude with context: c \"your prompt\""
     echo ""
     echo "Commands:"
     echo "  c --help         Show help"
     echo "  c --init <type>  Initialize context (ts/py/txt)"
     echo "  c --show-context Show current context"
+    echo "  c --bypass       Toggle bypass permissions mode"
+    echo "  c --container    Toggle container mode"
     echo ""
     echo "Documentation: https://github.com/BuildAppolis/claude-context-wrapper"
     echo "Created by: BuildAppolis (www.buildappolis.com)"
@@ -302,6 +342,11 @@ main() {
     install_examples
     verify_installation
     show_completion
+    
+    # Ask about initialization only if not in dev mode
+    if [[ "$1" != "--dev" ]] && [[ "$1" != "--no-init" ]]; then
+        initialize_project
+    fi
 }
 
 # Handle errors
