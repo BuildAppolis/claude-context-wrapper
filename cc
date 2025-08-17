@@ -2,7 +2,7 @@
 
 # Claude Context Wrapper
 # Created by BuildAppolis (www.buildappolis.com)
-# Version: 1.0.0
+# Version: 1.1.0
 
 set -e
 
@@ -28,7 +28,7 @@ CONTEXT_DIR=".claude"
 GLOBAL_CONTEXT_FILE="$HOME/.claude-global-context"
 BYPASS_STATE_FILE="$HOME/.claude-bypass-state"
 CONTAINER_STATE_FILE="$HOME/.claude-container-state"
-VERSION="1.1.0"
+VERSION="1.2.0"
 
 # ============================================
 # CUSTOMIZABLE LAUNCH COMMAND
@@ -54,22 +54,26 @@ Created by BuildAppolis (www.buildappolis.com)
 Usage: cc [OPTIONS] [prompt]
 
 When run without arguments, opens interactive Claude session with context.
+All Claude native commands and flags are supported (--continue, --resume, etc.)
 
-OPTIONS:
+WRAPPER OPTIONS:
     --init <type>     Initialize context file (ts, py, or txt)
     --show-context    Display current context that would be injected
     --set-global      Set global context for current session
     --clear-global    Clear global context
     --bypass          Toggle dangerous bypass permissions mode
     --container       Toggle container mode (restricts to current directory)
-    --help            Show this help message
-    --version         Show version information
+    --help wrapper    Show this wrapper help
+    --version         Show wrapper and Claude versions
 
 EXAMPLES:
-    cc "create a REST API endpoint"
-    cc --init ts
-    cc --set-global "Working on authentication"
-    cc --show-context
+    cc                          Open interactive Claude session
+    cc "create a REST API"      Run single prompt with context
+    cc --continue               Continue previous session with context
+    cc --resume                 Resume a conversation with context
+    cc --init ts                Initialize TypeScript context
+    cc --set-global "Sprint 24" Set global context
+    cc --show-context           Show current context
 
 ENVIRONMENT VARIABLES:
     CLAUDE_CONTEXT    Global context string
@@ -371,6 +375,59 @@ toggle_bypass_permissions() {
     fi
 }
 
+# Function to build context
+build_context() {
+    local base_context=$(get_base_context)
+    local project_context=$(get_project_context)
+    local global_context=$(get_global_context)
+    
+    # Add bypass mode to context if enabled
+    local bypass_context=""
+    if [[ -f "$BYPASS_STATE_FILE" ]]; then
+        bypass_context=", BYPASS_PERMISSIONS: ENABLED"
+    fi
+    
+    # Add container mode to context if enabled
+    local container_context=""
+    if [[ -f "$CONTAINER_STATE_FILE" ]]; then
+        local container_config=$(cat "$CONTAINER_STATE_FILE")
+        local container_root=$(echo "$container_config" | grep -o '"root":"[^"]*"' | cut -d'"' -f4)
+        container_context=", CONTAINER: $container_root"
+        
+        # Check if current directory is within container or allowed directories
+        local is_allowed=false
+        
+        # Check if we're in the container root
+        if [[ "$(pwd)" == "$container_root"* ]]; then
+            is_allowed=true
+        else
+            # Check allowed directories
+            local allowed_dirs=$(echo "$container_config" | grep -o '"allowed":\[[^]]*\]' | sed 's/.*\[//' | sed 's/\]//' | tr ',' '\n' | sed 's/"//g' | sed 's/[[:space:]]//g')
+            while IFS= read -r allowed_dir; do
+                if [[ -n "$allowed_dir" ]]; then
+                    # Expand path if it starts with ~
+                    allowed_dir="${allowed_dir/#\~/$HOME}"
+                    if [[ "$(pwd)" == "$allowed_dir"* ]]; then
+                        is_allowed=true
+                        container_context="$container_context (allowed: $allowed_dir)"
+                        break
+                    fi
+                fi
+            done <<< "$allowed_dirs"
+        fi
+        
+        if [[ "$is_allowed" != "true" ]]; then
+            echo -e "${RED}Error:${NC} Current directory is outside container and allowed directories!"
+            echo -e "Container root: $container_root"
+            echo -e "Current directory: $(pwd)"
+            echo -e "${YELLOW}Please cd to container directory or disable container mode${NC}"
+            exit 1
+        fi
+    fi
+    
+    echo "${base_context}${project_context}${global_context}${bypass_context}${container_context}]"
+}
+
 # Main logic
 main() {
     # Check if claude command exists
@@ -381,16 +438,23 @@ main() {
         exit 1
     fi
     
-    # Parse arguments
+    # Handle our wrapper-specific commands first
     case "$1" in
-        --help|-h)
-            show_help
-            exit 0
+        --help)
+            # Check if this is for our wrapper
+            if [[ "$2" == "wrapper" ]]; then
+                show_help
+                exit 0
+            fi
+            # Otherwise pass through to Claude
             ;;
             
-        --version|-v)
+        --version)
+            # Show both versions
             echo "Claude Context Wrapper v${VERSION}"
             echo "Created by BuildAppolis (www.buildappolis.com)"
+            echo ""
+            $CLAUDE_COMMAND --version
             exit 0
             ;;
             
@@ -431,128 +495,62 @@ main() {
             toggle_container_mode
             exit 0
             ;;
-            
-        "")
-            # No arguments - open interactive Claude session with context
-            local base_context=$(get_base_context)
-            local project_context=$(get_project_context)
-            local global_context=$(get_global_context)
-            
-            # Add bypass mode to context if enabled
-            local bypass_context=""
-            if [[ -f "$BYPASS_STATE_FILE" ]]; then
-                bypass_context=", BYPASS_PERMISSIONS: ENABLED"
-            fi
-            
-            # Add container mode to context if enabled
-            local container_context=""
-            if [[ -f "$CONTAINER_STATE_FILE" ]]; then
-                local container_config=$(cat "$CONTAINER_STATE_FILE")
-                local container_root=$(echo "$container_config" | grep -o '"root":"[^"]*"' | cut -d'"' -f4)
-                container_context=", CONTAINER: $container_root"
-            fi
-            
-            local full_context="${base_context}${project_context}${global_context}${bypass_context}${container_context}]"
-            
-            # Show context being injected
-            echo -e "${BLUE}Starting Claude with context...${NC}"
-            echo -e "${YELLOW}Context:${NC} ${full_context}"
-            echo ""
-            
-            # Start interactive Claude session with context as initial message
-            if [[ -f "$BYPASS_STATE_FILE" ]]; then
-                if [[ -f "$CONTAINER_STATE_FILE" ]]; then
-                    # Bypass + Container
-                    $CLAUDE_COMMAND --dangerously-skip-permissions --append-system-prompt "$full_context"
-                else
-                    # Bypass only
-                    $CLAUDE_COMMAND --dangerously-skip-permissions --append-system-prompt "$full_context"
-                fi
-            else
-                # Normal mode - just append context
-                $CLAUDE_COMMAND --append-system-prompt "$full_context"
-            fi
-            ;;
-            
-        *)
-            # Build full context
-            local base_context=$(get_base_context)
-            local project_context=$(get_project_context)
-            local global_context=$(get_global_context)
-            
-            # Add bypass mode to context if enabled
-            local bypass_context=""
-            if [[ -f "$BYPASS_STATE_FILE" ]]; then
-                bypass_context=", BYPASS_PERMISSIONS: ENABLED"
-            fi
-            
-            # Add container mode to context if enabled
-            local container_context=""
-            if [[ -f "$CONTAINER_STATE_FILE" ]]; then
-                local container_config=$(cat "$CONTAINER_STATE_FILE")
-                local container_root=$(echo "$container_config" | grep -o '"root":"[^"]*"' | cut -d'"' -f4)
-                container_context=", CONTAINER: $container_root"
-                
-                # Check if current directory is within container or allowed directories
-                local is_allowed=false
-                
-                # Check if we're in the container root
-                if [[ "$(pwd)" == "$container_root"* ]]; then
-                    is_allowed=true
-                else
-                    # Check allowed directories
-                    local allowed_dirs=$(echo "$container_config" | grep -o '"allowed":\[[^]]*\]' | sed 's/.*\[//' | sed 's/\]//' | tr ',' '\n' | sed 's/"//g' | sed 's/[[:space:]]//g')
-                    while IFS= read -r allowed_dir; do
-                        if [[ -n "$allowed_dir" ]]; then
-                            # Expand path if it starts with ~
-                            allowed_dir="${allowed_dir/#\~/$HOME}"
-                            if [[ "$(pwd)" == "$allowed_dir"* ]]; then
-                                is_allowed=true
-                                container_context="$container_context (allowed: $allowed_dir)"
-                                break
-                            fi
-                        fi
-                    done <<< "$allowed_dirs"
-                fi
-                
-                if [[ "$is_allowed" != "true" ]]; then
-                    echo -e "${RED}Error:${NC} Current directory is outside container and allowed directories!"
-                    echo -e "Container root: $container_root"
-                    echo -e "Current directory: $(pwd)"
-                    echo -e "${YELLOW}Please cd to container directory or disable container mode${NC}"
-                    exit 1
-                fi
-            fi
-            
-            local full_context="${base_context}${project_context}${global_context}${bypass_context}${container_context}]"
-            
-            # Debug mode
-            if [[ "$CCW_DEBUG" == "true" ]]; then
-                echo -e "${YELLOW}[DEBUG] Context:${NC} $full_context" >&2
-                echo -e "${YELLOW}[DEBUG] Prompt:${NC} $*" >&2
-            fi
-            
-            # Combine context with user prompt
-            local full_prompt="${full_context} $*"
-            
-            # Pass to claude with appropriate flags
-            if [[ -f "$BYPASS_STATE_FILE" ]]; then
-                if [[ -f "$CONTAINER_STATE_FILE" ]]; then
-                    # Bypass + Container: Safer mode with restrictions
-                    local container_root=$(cat "$CONTAINER_STATE_FILE")
-                    echo -e "${YELLOW}[Container + Bypass Mode]${NC} Root: $container_root" >&2
-                    $CLAUDE_COMMAND --dangerously-skip-permissions "$full_prompt"
-                else
-                    # Bypass only: Full unrestricted access
-                    echo -e "${RED}[Bypass Mode]${NC} Unrestricted file access" >&2
-                    $CLAUDE_COMMAND --dangerously-skip-permissions "$full_prompt"
-                fi
-            else
-                # Normal mode
-                $CLAUDE_COMMAND "$full_prompt"
-            fi
-            ;;
     esac
+    
+    # Build context for all Claude operations
+    local full_context=$(build_context)
+    
+    # Debug mode
+    if [[ "$CCW_DEBUG" == "true" ]]; then
+        echo -e "${YELLOW}[DEBUG] Context:${NC} $full_context" >&2
+        echo -e "${YELLOW}[DEBUG] Arguments:${NC} $*" >&2
+    fi
+    
+    # Build Claude command with context
+    local claude_args=()
+    
+    # Add bypass flag if enabled
+    if [[ -f "$BYPASS_STATE_FILE" ]]; then
+        claude_args+=("--dangerously-skip-permissions")
+    fi
+    
+    # Check if we have arguments or not
+    if [[ $# -eq 0 ]]; then
+        # No arguments - start interactive session
+        echo -e "${BLUE}Starting Claude with context...${NC}"
+        echo -e "${YELLOW}Context:${NC} ${full_context}"
+        echo ""
+        
+        claude_args+=("--append-system-prompt" "$full_context")
+    else
+        # We have arguments - check what they are
+        local is_prompt=true
+        
+        # Check if first arg is a Claude flag or command
+        if [[ "$1" =~ ^- ]] || [[ "$1" =~ ^(config|mcp|migrate-installer|setup-token|doctor|update|install)$ ]]; then
+            is_prompt=false
+        fi
+        
+        if [[ "$is_prompt" == "false" ]]; then
+            # It's a Claude command/flag - inject context via system prompt
+            claude_args+=("--append-system-prompt" "$full_context")
+            claude_args+=("$@")
+            
+            # Show context for interactive commands
+            if [[ "$1" == "-c" ]] || [[ "$1" == "--continue" ]] || [[ "$1" == "-r" ]] || [[ "$1" == "--resume" ]]; then
+                echo -e "${BLUE}Continuing/Resuming Claude with context...${NC}"
+                echo -e "${YELLOW}Context:${NC} ${full_context}"
+                echo ""
+            fi
+        else
+            # It's a prompt - prepend context to it
+            local full_prompt="${full_context} $*"
+            claude_args+=("$full_prompt")
+        fi
+    fi
+    
+    # Execute Claude with built arguments
+    $CLAUDE_COMMAND "${claude_args[@]}"
 }
 
 # Run main function with all arguments

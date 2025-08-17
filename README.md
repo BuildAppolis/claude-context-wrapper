@@ -39,6 +39,7 @@ cc
 
 ## ✨ Features
 
+- **Full Claude Compatibility**: All Claude native commands and flags work (`--continue`, `--resume`, etc.)
 - **Automatic Context Injection**: Automatically includes current date/time, working directory, and git information
 - **Project-Specific Context**: Load dynamic context from `.claude/context.ts`, `.claude/context.py`, or `.claude/context.txt`
 - **Dynamic Execution**: Context files are executed, allowing for real-time data collection
@@ -105,6 +106,12 @@ cc
 
 # Use Claude with automatic context (non-interactive)
 cc "create a REST API endpoint"
+
+# Continue previous session with context
+cc --continue
+
+# Resume a specific conversation with context
+cc --resume
 
 # Initialize context for current project
 cc --init ts|py|txt
