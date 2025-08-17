@@ -5,6 +5,17 @@ All notable changes to Claude Context Wrapper will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2025-08-17
+
+### Fixed
+- Installation script now properly displays version when run via curl
+- Fixed terminal input handling for pause at end of installation
+- Improved compatibility with different installation methods (local vs remote)
+
+### Changed
+- Installation script handles TTY availability more gracefully
+- Better error handling for terminal input during installation
+
 ## [1.2.1] - 2025-08-17
 
 ### Fixed

@@ -32,6 +32,11 @@ fi
 VERSION_TO_INSTALL="Unknown"
 if [[ "$INSTALL_MODE" == "local" ]] && [[ -f "$SOURCE_SCRIPT" ]]; then
     VERSION_TO_INSTALL=$(grep '^VERSION=' "$SOURCE_SCRIPT" | cut -d'"' -f2 || echo "Unknown")
+else
+    # For remote installation, try to fetch version
+    if command -v curl &> /dev/null; then
+        VERSION_TO_INSTALL=$(curl -sSL "$GITHUB_RAW/cc" 2>/dev/null | grep '^VERSION=' | head -1 | cut -d'"' -f2 || echo "Unknown")
+    fi
 fi
 
 echo -e "${BLUE}╔════════════════════════════════════════════╗${NC}"
@@ -119,8 +124,7 @@ get_version() {
 
 # Install the wrapper script
 install_wrapper() {
-    local version=$(get_version)
-    echo -e "Installing wrapper script ${BLUE}v$version${NC}... "
+    echo -n "Installing wrapper script... "
     
     if [[ "$INSTALL_MODE" == "local" ]]; then
         # Copy from local file
@@ -390,9 +394,22 @@ main() {
     echo -e "  ${BLUE}source ~/.bashrc${NC}  (or ~/.zshrc for Zsh)"
     echo ""
     
-    # Wait for user acknowledgment
-    echo -e "${GREEN}Press any key to continue...${NC}"
-    read -n 1 -s -r
+    # Wait for user acknowledgment 
+    if [[ -t 0 ]]; then
+        # Running directly with terminal input available
+        echo -e "${GREEN}Press any key to continue...${NC}"
+        read -n 1 -s -r
+    else
+        # Running via pipe (curl) - try to read from terminal
+        if [[ -e /dev/tty ]]; then
+            echo -e "${GREEN}Press Enter to exit...${NC}"
+            read -r < /dev/tty
+        else
+            # No terminal available, just pause briefly
+            echo -e "${GREEN}Installation complete!${NC}"
+            sleep 2
+        fi
+    fi
     echo ""
 }
 

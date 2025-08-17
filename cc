@@ -28,7 +28,7 @@ CONTEXT_DIR=".claude"
 GLOBAL_CONTEXT_FILE="$HOME/.claude-global-context"
 BYPASS_STATE_FILE="$HOME/.claude-bypass-state"
 CONTAINER_STATE_FILE="$HOME/.claude-container-state"
-VERSION="1.2.1"
+VERSION="1.2.2"
 
 # ============================================
 # CUSTOMIZABLE LAUNCH COMMAND
