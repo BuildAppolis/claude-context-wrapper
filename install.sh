@@ -13,10 +13,20 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Configuration
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 INSTALL_DIR="$HOME/.local/bin"
 SCRIPT_NAME="c"
-SOURCE_SCRIPT="$SCRIPT_DIR/c"
+GITHUB_RAW="https://raw.githubusercontent.com/BuildAppolis/claude-context-wrapper/main"
+
+# Detect if running from local clone or via curl
+if [[ -f "${BASH_SOURCE[0]}" ]] && [[ -f "$(dirname "${BASH_SOURCE[0]}")/c" ]]; then
+    # Running from local clone
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    SOURCE_SCRIPT="$SCRIPT_DIR/c"
+    INSTALL_MODE="local"
+else
+    # Running via curl
+    INSTALL_MODE="remote"
+fi
 
 echo -e "${BLUE}╔════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║   Claude Context Wrapper Installation     ║${NC}"
@@ -87,10 +97,23 @@ create_install_dir() {
 install_wrapper() {
     echo -n "Installing wrapper script... "
     
-    # Copy the script
-    cp "$SOURCE_SCRIPT" "$INSTALL_DIR/$SCRIPT_NAME"
-    chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
+    if [[ "$INSTALL_MODE" == "local" ]]; then
+        # Copy from local file
+        cp "$SOURCE_SCRIPT" "$INSTALL_DIR/$SCRIPT_NAME"
+    else
+        # Download from GitHub
+        if command -v curl &> /dev/null; then
+            curl -sSL "$GITHUB_RAW/c" -o "$INSTALL_DIR/$SCRIPT_NAME"
+        elif command -v wget &> /dev/null; then
+            wget -q "$GITHUB_RAW/c" -O "$INSTALL_DIR/$SCRIPT_NAME"
+        else
+            echo -e "${RED}✗${NC}"
+            echo "Error: Neither curl nor wget found. Please install one of them."
+            exit 1
+        fi
+    fi
     
+    chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
     echo -e "${GREEN}✓${NC}"
 }
 
@@ -134,9 +157,20 @@ install_examples() {
     local examples_dir="$HOME/.claude-context-examples"
     mkdir -p "$examples_dir"
     
-    # Copy examples if they exist
-    if [[ -d "$SCRIPT_DIR/.claude/examples" ]]; then
-        cp -r "$SCRIPT_DIR/.claude/examples/"* "$examples_dir/" 2>/dev/null || true
+    if [[ "$INSTALL_MODE" == "local" ]]; then
+        # Copy examples if they exist locally
+        if [[ -d "$SCRIPT_DIR/.claude/examples" ]]; then
+            cp -r "$SCRIPT_DIR/.claude/examples/"* "$examples_dir/" 2>/dev/null || true
+        fi
+    else
+        # Download examples from GitHub
+        if command -v curl &> /dev/null; then
+            curl -sSL "$GITHUB_RAW/.claude/examples/advanced-typescript.context.ts" -o "$examples_dir/advanced-ts.context.ts" 2>/dev/null || true
+            curl -sSL "$GITHUB_RAW/.claude/examples/advanced-python.context.py" -o "$examples_dir/advanced-py.context.py" 2>/dev/null || true
+        elif command -v wget &> /dev/null; then
+            wget -q "$GITHUB_RAW/.claude/examples/advanced-typescript.context.ts" -O "$examples_dir/advanced-ts.context.ts" 2>/dev/null || true
+            wget -q "$GITHUB_RAW/.claude/examples/advanced-python.context.py" -O "$examples_dir/advanced-py.context.py" 2>/dev/null || true
+        fi
     fi
     
     # Create basic examples if not present
@@ -248,9 +282,14 @@ show_completion() {
 
 # Development mode
 if [[ "$1" == "--dev" ]]; then
-    echo -e "${YELLOW}Running in development mode...${NC}"
-    INSTALL_DIR="$SCRIPT_DIR"
-    echo "Using local directory for testing"
+    if [[ "$INSTALL_MODE" == "local" ]]; then
+        echo -e "${YELLOW}Running in development mode...${NC}"
+        INSTALL_DIR="$SCRIPT_DIR"
+        echo "Using local directory for testing"
+    else
+        echo -e "${RED}Error: Development mode requires local installation${NC}"
+        exit 1
+    fi
 fi
 
 # Main installation flow
