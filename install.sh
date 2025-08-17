@@ -304,12 +304,7 @@ show_completion() {
     echo -e "${GREEN}  Installation Complete! 🎉${NC}"
     echo -e "${GREEN}════════════════════════════════════════════${NC}"
     echo ""
-    echo "Quick Start:"
-    echo "  1. Navigate to any project directory"
-    echo "  2. Initialize context: c --init ts|py|txt"
-    echo "  3. Use Claude with context: c \"your prompt\""
-    echo ""
-    echo "Commands:"
+    echo "Commands Available (after restart):"
     echo "  c --help         Show help"
     echo "  c --init <type>  Initialize context (ts/py/txt)"
     echo "  c --show-context Show current context"
@@ -355,6 +350,20 @@ main() {
     if [[ "$skip_init" == "false" ]]; then
         initialize_project
     fi
+    
+    # Final reminder about PATH
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${YELLOW}⚠  IMPORTANT: Restart your terminal!${NC}"
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo "The 'c' command won't work until you:"
+    echo -e "  ${GREEN}1.${NC} Close this terminal window/tab"
+    echo -e "  ${GREEN}2.${NC} Open a new terminal"
+    echo ""
+    echo "Or run this command to reload your shell:"
+    echo -e "  ${BLUE}source ~/.bashrc${NC}  (or ~/.zshrc for Zsh)"
+    echo ""
 }
 
 # Handle errors
