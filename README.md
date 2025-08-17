@@ -43,6 +43,8 @@ c "write a function to process user data"
 - **Git Integration**: Includes current branch, last commit hash, and uncommitted changes status
 - **Multiple Language Support**: Works with TypeScript, Python, and plain text context files
 - **Global Context**: Set session-wide context that persists across commands
+- **Bypass Permissions Mode**: Toggle `--dangerously-skip-permissions` flag for file modifications without prompts
+- **Container Mode**: Restrict Claude to current directory and subdirectories for safer operation
 - **Zero Config**: Works out of the box with sensible defaults
 
 ## 📋 Requirements
@@ -106,8 +108,47 @@ c --set-global "Working on authentication feature"
 # Clear global context
 c --clear-global
 
+# Toggle bypass permissions (use with caution!)
+c --bypass
+
+# Toggle container mode (safer operation)
+c --container
+
 # Show help
 c --help
+```
+
+### 🔒 Safety Features
+
+#### Container Mode
+Restrict Claude to only access files within the current directory and its subdirectories:
+
+```bash
+# Enable container mode in your project directory
+cd /path/to/my-project
+c --container
+
+# Now Claude can only access files within /path/to/my-project
+c "refactor the authentication module"
+
+# Attempting to use from outside will fail
+cd /tmp
+c "do something" # Error: Outside container root!
+```
+
+#### Bypass Permissions Mode
+Allow Claude to modify files without asking for permission (use with extreme caution):
+
+```bash
+# Enable bypass mode
+c --bypass
+# ⚠️ WARNING: Claude can now modify ANY files without asking!
+
+# For safer operation, combine with container mode
+c --container  # First, restrict to current directory
+c --bypass     # Then enable bypass within that container
+
+# Now Claude can modify files freely, but only within the container
 ```
 
 ### Context File Templates
@@ -167,6 +208,22 @@ export CCW_DISABLE_GIT=true                      # Disable git integration
 export CCW_TIMEOUT=5                              # Timeout for context execution (seconds)
 ```
 
+### Security Modes
+
+The wrapper provides two security modes that can be toggled independently:
+
+| Mode | Command | Effect | Risk Level |
+|------|---------|--------|------------|
+| Normal | Default | Claude asks permission for file changes | Safe |
+| Bypass | `c --bypass` | Uses `--dangerously-skip-permissions` flag | High Risk |
+| Container | `c --container` | Restricts access to current directory | Safer |
+| Container + Bypass | Both enabled | File changes without permission, but restricted to container | Medium Risk |
+
+**Best Practices:**
+- Never use bypass mode in your home directory or system directories
+- Always use container mode when working with bypass enabled
+- Disable bypass mode when done: `c --bypass` (toggles off)
+
 ### Project Configuration
 
 Create a `.claude/config.json` in your project:
@@ -181,8 +238,43 @@ Create a `.claude/config.json` in your project:
     "priority": "authentication"
   },
   "excludePaths": ["dist", "build", ".next"],
-  "contextTimeout": 3
+  "contextTimeout": 3,
+  "allowedDirectories": [
+    "~/Documents/shared-libs",
+    "/usr/local/include"
+  ]
 }
+```
+
+**Configuration Options:**
+- `customContext`: Additional context values to include
+- `contextTimeout`: Timeout for context script execution (seconds)
+- `allowedDirectories`: Additional directories accessible in container mode (useful for shared libraries or global configs)
+
+### Container Mode with Allowed Directories
+
+Container mode restricts Claude to the current directory by default, but you can allow additional directories:
+
+```bash
+# Create config with allowed directories
+cat > .claude/config.json << EOF
+{
+  "allowedDirectories": [
+    "~/Documents/shared-components",
+    "~/.config/app-settings",
+    "/usr/local/lib/mylib"
+  ]
+}
+EOF
+
+# Enable container mode
+c --container
+# Claude can now access:
+# - Current directory and subdirectories
+# - ~/Documents/shared-components/*
+# - ~/.config/app-settings/*
+# - /usr/local/lib/mylib/*
+# - Global context (read-only)
 ```
 
 ## 📁 Project Context Files

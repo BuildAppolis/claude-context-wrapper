@@ -26,7 +26,9 @@ fi
 # Configuration
 CONTEXT_DIR=".claude"
 GLOBAL_CONTEXT_FILE="$HOME/.claude-global-context"
-VERSION="1.0.0"
+BYPASS_STATE_FILE="$HOME/.claude-bypass-state"
+CONTAINER_STATE_FILE="$HOME/.claude-container-state"
+VERSION="1.0.2"
 
 # ============================================
 # CUSTOMIZABLE LAUNCH COMMAND
@@ -56,6 +58,8 @@ OPTIONS:
     --show-context    Display current context that would be injected
     --set-global      Set global context for current session
     --clear-global    Clear global context
+    --bypass          Toggle dangerous bypass permissions mode
+    --container       Toggle container mode (restricts to current directory)
     --help            Show this help message
     --version         Show version information
 
@@ -229,9 +233,21 @@ show_context() {
     local project_context=$(get_project_context)
     local global_context=$(get_global_context)
     
+    # Check bypass mode
+    local bypass_context=""
+    if [[ -f "$BYPASS_STATE_FILE" ]]; then
+        bypass_context=", BYPASS_PERMISSIONS: ENABLED"
+    fi
+    
+    # Check container mode
+    local container_context=""
+    if [[ -f "$CONTAINER_STATE_FILE" ]]; then
+        container_context=", CONTAINER: $(cat "$CONTAINER_STATE_FILE")"
+    fi
+    
     echo -e "${BLUE}=== Claude Context Wrapper ===${NC}"
     echo -e "${YELLOW}Current context that would be injected:${NC}"
-    echo "${base_context}${project_context}${global_context}]"
+    echo "${base_context}${project_context}${global_context}${bypass_context}${container_context}]"
     echo ""
     
     # Show which context file is being used
@@ -250,6 +266,18 @@ show_context() {
     elif [[ -f "$GLOBAL_CONTEXT_FILE" ]]; then
         echo -e "${GREEN}Global context (file):${NC} $(cat "$GLOBAL_CONTEXT_FILE")"
     fi
+    
+    # Show bypass mode status
+    if [[ -f "$BYPASS_STATE_FILE" ]]; then
+        echo -e "${RED}⚠ BYPASS MODE:${NC} ENABLED - Safety checks bypassed!"
+    else
+        echo -e "${GREEN}Permissions:${NC} Normal mode"
+    fi
+    
+    # Show container mode status
+    if [[ -f "$CONTAINER_STATE_FILE" ]]; then
+        echo -e "${BLUE}📦 CONTAINER:${NC} Restricted to $(cat "$CONTAINER_STATE_FILE")"
+    fi
 }
 
 # Function to set global context
@@ -264,6 +292,80 @@ clear_global_context() {
     rm -f "$GLOBAL_CONTEXT_FILE"
     unset CLAUDE_CONTEXT
     echo -e "${GREEN}✓${NC} Global context cleared"
+}
+
+# Function to toggle container mode
+toggle_container_mode() {
+    if [[ -f "$CONTAINER_STATE_FILE" ]]; then
+        # Container mode is currently ON, turn it OFF
+        rm -f "$CONTAINER_STATE_FILE"
+        echo -e "${GREEN}✓${NC} Container mode DISABLED"
+        echo -e "${YELLOW}Claude can now access files outside current directory${NC}"
+    else
+        # Container mode is currently OFF, turn it ON
+        # Store container config as JSON
+        local container_config="{\"root\":\"$(pwd)\",\"allowed\":[]}"
+        
+        # Check for allowed directories in .claude/config.json
+        if [[ -f "${CONTEXT_DIR}/config.json" ]]; then
+            local allowed_dirs=$(cat "${CONTEXT_DIR}/config.json" 2>/dev/null | grep -o '"allowedDirectories"[[:space:]]*:[[:space:]]*\[[^]]*\]' | sed 's/.*\[/[/' | sed 's/\]/]/' || echo "[]")
+            if [[ "$allowed_dirs" != "[]" ]]; then
+                container_config="{\"root\":\"$(pwd)\",\"allowed\":$allowed_dirs}"
+                echo -e "${BLUE}Additional allowed directories from config:${NC}"
+                echo "$allowed_dirs" | sed 's/[][]//g' | tr ',' '\n' | sed 's/"//g' | while read dir; do
+                    [[ -n "$dir" ]] && echo "  - $dir"
+                done
+            fi
+        fi
+        
+        echo "$container_config" > "$CONTAINER_STATE_FILE"
+        echo -e "${GREEN}✓${NC} Container mode ENABLED"
+        echo -e "${BLUE}Container root:${NC} $(pwd)"
+        echo -e "${YELLOW}Claude is restricted to this directory and subdirectories${NC}"
+        echo -e "${GREEN}Global context:${NC} Still accessible (read-only)"
+        
+        if [[ -f "$BYPASS_STATE_FILE" ]]; then
+            echo ""
+            echo -e "${GREEN}Safer bypass mode active:${NC}"
+            echo "- File modifications without permission: YES"
+            echo "- Restricted to container: YES"
+            echo "- Global context access: YES"
+        fi
+    fi
+    
+    # Show current state
+    if [[ -f "$CONTAINER_STATE_FILE" ]]; then
+        local config=$(cat "$CONTAINER_STATE_FILE")
+        local root=$(echo "$config" | grep -o '"root":"[^"]*"' | cut -d'"' -f4)
+        echo "Current state: CONTAINER ON (root: $root)"
+    else
+        echo "Current state: No container restrictions"
+    fi
+}
+
+# Function to toggle bypass permissions
+toggle_bypass_permissions() {
+    if [[ -f "$BYPASS_STATE_FILE" ]]; then
+        # Bypass is currently ON, turn it OFF
+        rm -f "$BYPASS_STATE_FILE"
+        echo -e "${GREEN}✓${NC} Bypass permissions mode DISABLED"
+        echo -e "${YELLOW}Normal file permissions restored${NC}"
+    else
+        # Bypass is currently OFF, turn it ON
+        echo "enabled" > "$BYPASS_STATE_FILE"
+        echo -e "${YELLOW}⚠ WARNING: Bypass permissions mode ENABLED${NC}"
+        echo -e "${RED}This will use --dangerously-skip-permissions flag${NC}"
+        echo -e "${RED}Claude can modify ANY files without asking!${NC}"
+        echo ""
+        echo -e "${YELLOW}For safer operation, consider using --container mode${NC}"
+    fi
+    
+    # Show current state
+    if [[ -f "$BYPASS_STATE_FILE" ]]; then
+        echo "Current state: BYPASS ON (--dangerously-skip-permissions)"
+    else
+        echo "Current state: Normal mode (file modifications require permission)"
+    fi
 }
 
 # Main logic
@@ -317,6 +419,16 @@ main() {
             exit 0
             ;;
             
+        --bypass)
+            toggle_bypass_permissions
+            exit 0
+            ;;
+            
+        --container)
+            toggle_container_mode
+            exit 0
+            ;;
+            
         "")
             echo -e "${RED}Error:${NC} No prompt provided"
             echo "Usage: c \"your prompt here\""
@@ -329,7 +441,52 @@ main() {
             local base_context=$(get_base_context)
             local project_context=$(get_project_context)
             local global_context=$(get_global_context)
-            local full_context="${base_context}${project_context}${global_context}]"
+            
+            # Add bypass mode to context if enabled
+            local bypass_context=""
+            if [[ -f "$BYPASS_STATE_FILE" ]]; then
+                bypass_context=", BYPASS_PERMISSIONS: ENABLED"
+            fi
+            
+            # Add container mode to context if enabled
+            local container_context=""
+            if [[ -f "$CONTAINER_STATE_FILE" ]]; then
+                local container_config=$(cat "$CONTAINER_STATE_FILE")
+                local container_root=$(echo "$container_config" | grep -o '"root":"[^"]*"' | cut -d'"' -f4)
+                container_context=", CONTAINER: $container_root"
+                
+                # Check if current directory is within container or allowed directories
+                local is_allowed=false
+                
+                # Check if we're in the container root
+                if [[ "$(pwd)" == "$container_root"* ]]; then
+                    is_allowed=true
+                else
+                    # Check allowed directories
+                    local allowed_dirs=$(echo "$container_config" | grep -o '"allowed":\[[^]]*\]' | sed 's/.*\[//' | sed 's/\]//' | tr ',' '\n' | sed 's/"//g' | sed 's/[[:space:]]//g')
+                    while IFS= read -r allowed_dir; do
+                        if [[ -n "$allowed_dir" ]]; then
+                            # Expand path if it starts with ~
+                            allowed_dir="${allowed_dir/#\~/$HOME}"
+                            if [[ "$(pwd)" == "$allowed_dir"* ]]; then
+                                is_allowed=true
+                                container_context="$container_context (allowed: $allowed_dir)"
+                                break
+                            fi
+                        fi
+                    done <<< "$allowed_dirs"
+                fi
+                
+                if [[ "$is_allowed" != "true" ]]; then
+                    echo -e "${RED}Error:${NC} Current directory is outside container and allowed directories!"
+                    echo -e "Container root: $container_root"
+                    echo -e "Current directory: $(pwd)"
+                    echo -e "${YELLOW}Please cd to container directory or disable container mode${NC}"
+                    exit 1
+                fi
+            fi
+            
+            local full_context="${base_context}${project_context}${global_context}${bypass_context}${container_context}]"
             
             # Debug mode
             if [[ "$CCW_DEBUG" == "true" ]]; then
@@ -340,8 +497,22 @@ main() {
             # Combine context with user prompt
             local full_prompt="${full_context} $*"
             
-            # Pass to claude
-            $CLAUDE_COMMAND "$full_prompt"
+            # Pass to claude with appropriate flags
+            if [[ -f "$BYPASS_STATE_FILE" ]]; then
+                if [[ -f "$CONTAINER_STATE_FILE" ]]; then
+                    # Bypass + Container: Safer mode with restrictions
+                    local container_root=$(cat "$CONTAINER_STATE_FILE")
+                    echo -e "${YELLOW}[Container + Bypass Mode]${NC} Root: $container_root" >&2
+                    $CLAUDE_COMMAND --dangerously-skip-permissions "$full_prompt"
+                else
+                    # Bypass only: Full unrestricted access
+                    echo -e "${RED}[Bypass Mode]${NC} Unrestricted file access" >&2
+                    $CLAUDE_COMMAND --dangerously-skip-permissions "$full_prompt"
+                fi
+            else
+                # Normal mode
+                $CLAUDE_COMMAND "$full_prompt"
+            fi
             ;;
     esac
 }
