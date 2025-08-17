@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+*.pyc
+__pycache__/
+venv/
+.venv/
+env/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+test/
+tests/
+*.test.*
+
+# Local context files (for development)
+# Keep examples but ignore user-created context files
+.claude/context.*
+.claude/config.json
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Build outputs
+dist/
+build/
+*.egg-info/
