@@ -28,9 +28,18 @@ else
     INSTALL_MODE="remote"
 fi
 
+# Get version early for display
+VERSION_TO_INSTALL="Unknown"
+if [[ "$INSTALL_MODE" == "local" ]] && [[ -f "$SOURCE_SCRIPT" ]]; then
+    VERSION_TO_INSTALL=$(grep '^VERSION=' "$SOURCE_SCRIPT" | cut -d'"' -f2 || echo "Unknown")
+fi
+
 echo -e "${BLUE}╔════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║   Claude Context Wrapper Installation     ║${NC}"
 echo -e "${BLUE}║        by BuildAppolis.com                ║${NC}"
+if [[ "$VERSION_TO_INSTALL" != "Unknown" ]]; then
+    printf "${BLUE}║          Version: %-24s ║${NC}\n" "v$VERSION_TO_INSTALL"
+fi
 echo -e "${BLUE}╚════════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -93,9 +102,25 @@ create_install_dir() {
     echo -e "${GREEN}✓${NC}"
 }
 
+# Get version from the script
+get_version() {
+    local version="Unknown"
+    if [[ "$INSTALL_MODE" == "local" ]]; then
+        # Extract version from local file
+        version=$(grep '^VERSION=' "$SOURCE_SCRIPT" | cut -d'"' -f2 || echo "Unknown")
+    else
+        # Try to get version from remote
+        if command -v curl &> /dev/null; then
+            version=$(curl -sSL "$GITHUB_RAW/cc" | grep '^VERSION=' | cut -d'"' -f2 || echo "Unknown")
+        fi
+    fi
+    echo "$version"
+}
+
 # Install the wrapper script
 install_wrapper() {
-    echo -n "Installing wrapper script... "
+    local version=$(get_version)
+    echo -e "Installing wrapper script ${BLUE}v$version${NC}... "
     
     if [[ "$INSTALL_MODE" == "local" ]]; then
         # Copy from local file
@@ -363,6 +388,11 @@ main() {
     echo ""
     echo "Or run this command to reload your shell:"
     echo -e "  ${BLUE}source ~/.bashrc${NC}  (or ~/.zshrc for Zsh)"
+    echo ""
+    
+    # Wait for user acknowledgment
+    echo -e "${GREEN}Press any key to continue...${NC}"
+    read -n 1 -s -r
     echo ""
 }
 
