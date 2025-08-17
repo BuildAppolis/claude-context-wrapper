@@ -50,8 +50,8 @@ Please test your changes on:
 
 ## Community
 
-- Issues: [GitHub Issues](https://github.com/buildappolis/claude-context-wrapper/issues)
-- Discussions: [GitHub Discussions](https://github.com/buildappolis/claude-context-wrapper/discussions)
+- Issues: [GitHub Issues](https://github.com/BuildAppolis/claude-context-wrapper/issues)
+- Discussions: [GitHub Discussions](https://github.com/BuildAppolis/claude-context-wrapper/discussions)
 
 ## License
 

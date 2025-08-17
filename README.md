@@ -8,7 +8,7 @@ A smart context injection tool for Claude Code that automatically includes proje
 
 ```bash
 # Clone and install
-git clone https://github.com/buildappolis/claude-context-wrapper.git
+git clone https://github.com/BuildAppolis/claude-context-wrapper.git
 cd claude-context-wrapper
 ./install.sh
 
@@ -64,14 +64,14 @@ Other optional dependencies for enhanced functionality:
 ### Automatic Installation
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/buildappolis/claude-context-wrapper/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/BuildAppolis/claude-context-wrapper/main/install.sh | bash
 ```
 
 ### Manual Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/buildappolis/claude-context-wrapper.git
+git clone https://github.com/BuildAppolis/claude-context-wrapper.git
 cd claude-context-wrapper
 ```
 
@@ -300,7 +300,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deta
 
 ```bash
 # Clone the repo
-git clone https://github.com/buildappolis/claude-context-wrapper.git
+git clone https://github.com/BuildAppolis/claude-context-wrapper.git
 cd claude-context-wrapper
 
 # Install locally for development
@@ -320,8 +320,8 @@ Created and maintained by [BuildAppolis](https://www.buildappolis.com) - Buildin
 
 ## 📮 Support
 
-- **Issues**: [GitHub Issues](https://github.com/buildappolis/claude-context-wrapper/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/buildappolis/claude-context-wrapper/discussions)
+- **Issues**: [GitHub Issues](https://github.com/BuildAppolis/claude-context-wrapper/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/BuildAppolis/claude-context-wrapper/discussions)
 - **Website**: [www.buildappolis.com](https://www.buildappolis.com)
 
 ## 🚦 Roadmap

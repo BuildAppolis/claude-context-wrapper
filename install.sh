@@ -242,7 +242,7 @@ show_completion() {
     echo "  c --init <type>  Initialize context (ts/py/txt)"
     echo "  c --show-context Show current context"
     echo ""
-    echo "Documentation: https://github.com/buildappolis/claude-context-wrapper"
+    echo "Documentation: https://github.com/BuildAppolis/claude-context-wrapper"
     echo "Created by: BuildAppolis (www.buildappolis.com)"
 }
 

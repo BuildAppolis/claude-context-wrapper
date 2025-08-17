@@ -71,7 +71,7 @@ ENVIRONMENT VARIABLES:
     CCW_DISABLE_GIT   Disable git integration (true/false)
     CCW_TIMEOUT       Context execution timeout in seconds (default: 3)
 
-For more information, visit: https://github.com/buildappolis/claude-context-wrapper
+For more information, visit: https://github.com/BuildAppolis/claude-context-wrapper
 EOF
 }
 

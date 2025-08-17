@@ -5,7 +5,7 @@
 # Created by BuildAppolis (www.buildappolis.com)
 
 # This script can be run with:
-# curl -sSL https://raw.githubusercontent.com/buildappolis/claude-context-wrapper/main/setup.sh | bash -s -- [type]
+# curl -sSL https://raw.githubusercontent.com/BuildAppolis/claude-context-wrapper/main/setup.sh | bash -s -- [type]
 
 set -e
 
@@ -117,4 +117,4 @@ echo ""
 echo "Example: claude \"create a new API endpoint\""
 echo ""
 echo "For the full wrapper with 'c' command, install from:"
-echo "https://github.com/buildappolis/claude-context-wrapper"
+echo "https://github.com/BuildAppolis/claude-context-wrapper"
