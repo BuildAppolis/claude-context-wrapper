@@ -70,11 +70,15 @@ Other optional dependencies for enhanced functionality:
 ### Automatic Installation
 
 ```bash
-# Interactive installation (will prompt to initialize in current directory)
+# Quick install with one command
 curl -sSL https://raw.githubusercontent.com/BuildAppolis/claude-context-wrapper/main/install.sh | bash
+```
 
-# Skip initialization prompt
-curl -sSL https://raw.githubusercontent.com/BuildAppolis/claude-context-wrapper/main/install.sh | bash -s -- --no-init
+After installation, initialize context in any project directory:
+```bash
+cc --init ts   # For TypeScript projects
+cc --init py   # For Python projects  
+cc --init txt  # For text-based context
 ```
 
 ### Manual Installation

@@ -287,43 +287,21 @@ verify_installation() {
     fi
 }
 
-# Initialize project context
-initialize_project() {
+# Show initialization instructions
+show_init_instructions() {
     echo ""
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${YELLOW}Would you like to initialize Claude context in the current directory?${NC}"
-    echo "Current directory: $(pwd)"
+    echo -e "${YELLOW}📁 Initialize Context in Your Projects${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
-    echo "Options:"
-    echo "  1) TypeScript project (.ts)"
-    echo "  2) Python project (.py)"
-    echo "  3) Text-based context (.txt)"
-    echo "  4) Skip for now"
+    echo "To set up context in any project directory, run:"
     echo ""
-    read -p "Enter your choice (1-4): " -n 1 -r
+    echo -e "  ${GREEN}cc --init ts${NC}   # For TypeScript projects"
+    echo -e "  ${GREEN}cc --init py${NC}   # For Python projects"
+    echo -e "  ${GREEN}cc --init txt${NC}  # For text-based context"
     echo ""
-    
-    case "$REPLY" in
-        1)
-            echo -e "${GREEN}Initializing TypeScript context...${NC}"
-            "$INSTALL_DIR/$SCRIPT_NAME" --init ts
-            echo -e "${GREEN}✓ Context initialized in $(pwd)/.claude/${NC}"
-            ;;
-        2)
-            echo -e "${GREEN}Initializing Python context...${NC}"
-            "$INSTALL_DIR/$SCRIPT_NAME" --init py
-            echo -e "${GREEN}✓ Context initialized in $(pwd)/.claude/${NC}"
-            ;;
-        3)
-            echo -e "${GREEN}Initializing text context...${NC}"
-            "$INSTALL_DIR/$SCRIPT_NAME" --init txt
-            echo -e "${GREEN}✓ Context initialized in $(pwd)/.claude/${NC}"
-            ;;
-        4|*)
-            echo -e "${YELLOW}Skipping initialization.${NC}"
-            echo "You can initialize context later with: cc --init <type>"
-            ;;
-    esac
+    echo "This creates a .claude/ folder with a context file that"
+    echo "automatically provides project info to Claude."
 }
 
 # Show completion message
@@ -333,12 +311,16 @@ show_completion() {
     echo -e "${GREEN}  Installation Complete! 🎉${NC}"
     echo -e "${GREEN}════════════════════════════════════════════${NC}"
     echo ""
-    echo "Commands Available (after restart):"
-    echo "  cc --help         Show help"
-    echo "  cc --init <type>  Initialize context (ts/py/txt)"
-    echo "  cc --show-context Show current context"
-    echo "  cc --bypass       Toggle bypass permissions mode"
-    echo "  cc --container    Toggle container mode"
+    echo -e "${YELLOW}Quick Start:${NC}"
+    echo "  cc                Open interactive Claude session"
+    echo "  cc --help         Show wrapper commands"
+    echo "  cc --init <type>  Initialize context in a project"
+    echo ""
+    echo -e "${YELLOW}Key Features:${NC}"
+    echo "  • Automatic context injection"
+    echo "  • Full Claude command compatibility"
+    echo "  • Project-specific context files"
+    echo "  • Git integration & framework detection"
     echo ""
     echo "Documentation: https://github.com/BuildAppolis/claude-context-wrapper"
     echo "Created by: BuildAppolis (www.buildappolis.com)"
@@ -367,18 +349,8 @@ main() {
     verify_installation
     show_completion
     
-    # Ask about initialization only if not in dev mode or --no-init flag
-    local skip_init=false
-    for arg in "$@"; do
-        if [[ "$arg" == "--no-init" ]] || [[ "$arg" == "--dev" ]]; then
-            skip_init=true
-            break
-        fi
-    done
-    
-    if [[ "$skip_init" == "false" ]]; then
-        initialize_project
-    fi
+    # Show initialization instructions instead of interactive prompt
+    show_init_instructions
     
     # Final reminder about PATH
     echo ""
@@ -394,22 +366,9 @@ main() {
     echo -e "  ${BLUE}source ~/.bashrc${NC}  (or ~/.zshrc for Zsh)"
     echo ""
     
-    # Wait for user acknowledgment 
-    if [[ -t 0 ]]; then
-        # Running directly with terminal input available
-        echo -e "${GREEN}Press any key to continue...${NC}"
-        read -n 1 -s -r
-    else
-        # Running via pipe (curl) - try to read from terminal
-        if [[ -e /dev/tty ]]; then
-            echo -e "${GREEN}Press Enter to exit...${NC}"
-            read -r < /dev/tty
-        else
-            # No terminal available, just pause briefly
-            echo -e "${GREEN}Installation complete!${NC}"
-            sleep 2
-        fi
-    fi
+    # Don't wait for input - just show a final message
+    echo ""
+    echo -e "${GREEN}✨ Setup complete! Happy coding with Claude Context Wrapper!${NC}"
     echo ""
 }
 
