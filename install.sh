@@ -30,12 +30,12 @@ fi
 
 # Get version early for display
 VERSION_TO_INSTALL="Unknown"
-if [[ "$INSTALL_MODE" == "local" ]] && [[ -f "$SOURCE_SCRIPT" ]]; then
-    VERSION_TO_INSTALL=$(grep '^VERSION=' "$SOURCE_SCRIPT" | cut -d'"' -f2 || echo "Unknown")
+if [[ "$INSTALL_MODE" == "local" ]] && [[ -f "$SCRIPT_DIR/VERSION" ]]; then
+    VERSION_TO_INSTALL=$(cat "$SCRIPT_DIR/VERSION")
 else
-    # For remote installation, try to fetch version
+    # For remote installation, fetch VERSION file
     if command -v curl &> /dev/null; then
-        VERSION_TO_INSTALL=$(curl -sSL "$GITHUB_RAW/cc" 2>/dev/null | grep '^VERSION=' | head -1 | cut -d'"' -f2 || echo "Unknown")
+        VERSION_TO_INSTALL=$(curl -sSL "$GITHUB_RAW/VERSION" 2>/dev/null || echo "Unknown")
     fi
 fi
 
@@ -107,16 +107,15 @@ create_install_dir() {
     echo -e "${GREEN}✓${NC}"
 }
 
-# Get version from the script
+# Get version from VERSION file
 get_version() {
     local version="Unknown"
-    if [[ "$INSTALL_MODE" == "local" ]]; then
-        # Extract version from local file
-        version=$(grep '^VERSION=' "$SOURCE_SCRIPT" | cut -d'"' -f2 || echo "Unknown")
+    if [[ "$INSTALL_MODE" == "local" ]] && [[ -f "$SCRIPT_DIR/VERSION" ]]; then
+        version=$(cat "$SCRIPT_DIR/VERSION")
     else
         # Try to get version from remote
         if command -v curl &> /dev/null; then
-            version=$(curl -sSL "$GITHUB_RAW/cc" | grep '^VERSION=' | cut -d'"' -f2 || echo "Unknown")
+            version=$(curl -sSL "$GITHUB_RAW/VERSION" 2>/dev/null || echo "Unknown")
         fi
     fi
     echo "$version"
@@ -127,14 +126,19 @@ install_wrapper() {
     echo -n "Installing wrapper script... "
     
     if [[ "$INSTALL_MODE" == "local" ]]; then
-        # Copy from local file
+        # Copy from local files
         cp "$SOURCE_SCRIPT" "$INSTALL_DIR/$SCRIPT_NAME"
+        if [[ -f "$SCRIPT_DIR/VERSION" ]]; then
+            cp "$SCRIPT_DIR/VERSION" "$INSTALL_DIR/VERSION"
+        fi
     else
         # Download from GitHub
         if command -v curl &> /dev/null; then
             curl -sSL "$GITHUB_RAW/cc" -o "$INSTALL_DIR/$SCRIPT_NAME"
+            curl -sSL "$GITHUB_RAW/VERSION" -o "$INSTALL_DIR/VERSION" 2>/dev/null || true
         elif command -v wget &> /dev/null; then
             wget -q "$GITHUB_RAW/cc" -O "$INSTALL_DIR/$SCRIPT_NAME"
+            wget -q "$GITHUB_RAW/VERSION" -O "$INSTALL_DIR/VERSION" 2>/dev/null || true
         else
             echo -e "${RED}✗${NC}"
             echo "Error: Neither curl nor wget found. Please install one of them."

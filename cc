@@ -28,7 +28,17 @@ CONTEXT_DIR=".claude"
 GLOBAL_CONTEXT_FILE="$HOME/.claude-global-context"
 BYPASS_STATE_FILE="$HOME/.claude-bypass-state"
 CONTAINER_STATE_FILE="$HOME/.claude-container-state"
-VERSION="1.2.3"
+
+# Get version from VERSION file (single source of truth)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SCRIPT_DIR/VERSION" ]]; then
+    VERSION=$(cat "$SCRIPT_DIR/VERSION")
+elif [[ -f "$HOME/.local/bin/VERSION" ]]; then
+    # Fallback for installed version
+    VERSION=$(cat "$HOME/.local/bin/VERSION")
+else
+    VERSION="Unknown"
+fi
 
 # ============================================
 # CUSTOMIZABLE LAUNCH COMMAND

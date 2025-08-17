@@ -423,6 +423,15 @@ cd claude-context-wrapper
 ./test.sh
 ```
 
+### Version Management
+
+The project version is maintained in a single `VERSION` file for consistency. To update the version:
+1. Edit the `VERSION` file with the new version number
+2. Update `CHANGELOG.md` with release notes
+3. Commit and push changes
+
+The version will automatically be used by both the wrapper script and installation process.
+
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file for details.

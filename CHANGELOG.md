@@ -5,6 +5,21 @@ All notable changes to Claude Context Wrapper will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-08-17
+
+### Added
+- Single source of truth for version management via VERSION file
+- Automatic version synchronization across all components
+
+### Changed
+- Version is now read from VERSION file instead of hardcoded
+- Installation script copies VERSION file for consistent versioning
+- Simplified version updates - only need to edit VERSION file
+
+### Improved
+- Version management workflow for maintainers
+- Consistency across wrapper script and installation process
+
 ## [1.2.3] - 2025-08-17
 
 ### Changed
