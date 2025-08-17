@@ -28,7 +28,7 @@ CONTEXT_DIR=".claude"
 GLOBAL_CONTEXT_FILE="$HOME/.claude-global-context"
 BYPASS_STATE_FILE="$HOME/.claude-bypass-state"
 CONTAINER_STATE_FILE="$HOME/.claude-container-state"
-VERSION="1.0.2"
+VERSION="1.1.0"
 
 # ============================================
 # CUSTOMIZABLE LAUNCH COMMAND
@@ -51,7 +51,9 @@ show_help() {
 Claude Context Wrapper v${VERSION}
 Created by BuildAppolis (www.buildappolis.com)
 
-Usage: cc [OPTIONS] "prompt"
+Usage: cc [OPTIONS] [prompt]
+
+When run without arguments, opens interactive Claude session with context.
 
 OPTIONS:
     --init <type>     Initialize context file (ts, py, or txt)
@@ -431,10 +433,45 @@ main() {
             ;;
             
         "")
-            echo -e "${RED}Error:${NC} No prompt provided"
-            echo "Usage: cc \"your prompt here\""
-            echo "Use 'cc --help' for more information"
-            exit 1
+            # No arguments - open interactive Claude session with context
+            local base_context=$(get_base_context)
+            local project_context=$(get_project_context)
+            local global_context=$(get_global_context)
+            
+            # Add bypass mode to context if enabled
+            local bypass_context=""
+            if [[ -f "$BYPASS_STATE_FILE" ]]; then
+                bypass_context=", BYPASS_PERMISSIONS: ENABLED"
+            fi
+            
+            # Add container mode to context if enabled
+            local container_context=""
+            if [[ -f "$CONTAINER_STATE_FILE" ]]; then
+                local container_config=$(cat "$CONTAINER_STATE_FILE")
+                local container_root=$(echo "$container_config" | grep -o '"root":"[^"]*"' | cut -d'"' -f4)
+                container_context=", CONTAINER: $container_root"
+            fi
+            
+            local full_context="${base_context}${project_context}${global_context}${bypass_context}${container_context}]"
+            
+            # Show context being injected
+            echo -e "${BLUE}Starting Claude with context...${NC}"
+            echo -e "${YELLOW}Context:${NC} ${full_context}"
+            echo ""
+            
+            # Start interactive Claude session with context as initial message
+            if [[ -f "$BYPASS_STATE_FILE" ]]; then
+                if [[ -f "$CONTAINER_STATE_FILE" ]]; then
+                    # Bypass + Container
+                    $CLAUDE_COMMAND --dangerously-skip-permissions --append-system-prompt "$full_context"
+                else
+                    # Bypass only
+                    $CLAUDE_COMMAND --dangerously-skip-permissions --append-system-prompt "$full_context"
+                fi
+            else
+                # Normal mode - just append context
+                $CLAUDE_COMMAND --append-system-prompt "$full_context"
+            fi
             ;;
             
         *)

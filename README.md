@@ -19,6 +19,9 @@ cc --init txt # For simple text context
 
 # Use Claude with automatic context
 cc "write a function to process user data"
+
+# Or open interactive session with context
+cc
 ```
 
 ## 📋 Table of Contents
@@ -97,7 +100,10 @@ source ~/.bashrc  # or ~/.zshrc
 ### Basic Commands
 
 ```bash
-# Use Claude with automatic context
+# Open interactive Claude session with context
+cc
+
+# Use Claude with automatic context (non-interactive)
 cc "create a REST API endpoint"
 
 # Initialize context for current project
